@@ -208,25 +208,26 @@ async def _run_ai_loop(client, uid: str, session_id: str, symbol: str, product_i
                         candle_buffer=candle_buffer,
                         threshold=max(0.5, min(0.95, threshold_pct / 100))
                     )
+                    confidence_raw = float(signal.get('confidence', 0))
+                    confidence_pct = confidence_raw * 100 if confidence_raw <= 1 else confidence_raw
 
                     save_ai_signal(session_id, {
                         'symbol': symbol,
                         'signal': signal.get('signal', 'hold'),
-                        'confidence': signal.get('confidence', 0),
+                        'confidence': round(confidence_pct, 1),
                         'reason': signal.get('reason', ''),
                         'mode': mode
                     })
 
                     update_ai_session(session_id, {
                         'last_signal': signal.get('signal', 'hold'),
-                        'last_confidence': signal.get('confidence', 0),
+                        'last_confidence': round(confidence_pct, 1),
                         'last_reason': signal.get('reason', ''),
                         'last_signal_at': int(time.time())
                     })
 
                     action = signal.get('signal', 'hold')
-                    confidence = float(signal.get('confidence', 0))
-                    if action not in ['buy', 'sell'] or confidence < threshold_pct:
+                    if action not in ['buy', 'sell'] or confidence_pct < threshold_pct:
                         consecutive_errors = 0
                         continue
 

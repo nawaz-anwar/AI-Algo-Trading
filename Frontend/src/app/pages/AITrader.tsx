@@ -57,6 +57,11 @@ export function AITrader() {
 
   const confidenceThreshold = Math.round(form.confidence_threshold * 100);
   const isActive = session?.status === 'active';
+  const normalizePct = (value?: number) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n)) return 0;
+    return n <= 1 ? n * 100 : n;
+  };
   const selectedSymbolLabel = useMemo(
     () => SYMBOL_OPTIONS.find((s) => s.value === (session?.symbol || form.symbol))?.label || form.symbol,
     [form.symbol, session?.symbol]
@@ -191,13 +196,13 @@ export function AITrader() {
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-[#94A3B8]">Last Signal</p>
                 <p className="text-xs font-medium text-[#16A34A]">
-                  {(session?.last_signal || 'hold').toUpperCase()} {Math.round(session?.last_confidence || 0)}%
+                  {(session?.last_signal || 'hold').toUpperCase()} {Math.round(normalizePct(session?.last_confidence))}%
                 </p>
               </div>
               <div className="w-40 h-2 bg-[#334155] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#7C3AED] rounded-full transition-all"
-                  style={{ width: `${Math.min(100, Math.max(0, session?.last_confidence || 0))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, normalizePct(session?.last_confidence)))}%` }}
                 />
               </div>
             </div>
@@ -393,10 +398,10 @@ export function AITrader() {
                       <div className="w-20 h-1.5 bg-[#334155] rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#7C3AED] rounded-full"
-                          style={{ width: `${Math.min(100, Math.max(0, signal.confidence || 0))}%` }}
+                          style={{ width: `${Math.min(100, Math.max(0, normalizePct(signal.confidence)))}%` }}
                         />
                       </div>
-                      <span className="text-xs text-[#F1F5F9] w-8">{Math.round(signal.confidence || 0)}%</span>
+                      <span className="text-xs text-[#F1F5F9] w-8">{Math.round(normalizePct(signal.confidence))}%</span>
                     </div>
                   </td>
                   <td className="py-3 text-sm text-[#94A3B8]">
