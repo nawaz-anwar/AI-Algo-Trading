@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.routers.auth import get_current_user
 from app.services.firestore_service import (
-    create_algo_run, stop_algo_run, get_active_algo_runs, get_algo_run
+    create_algo_run, stop_algo_run, get_active_algo_runs, get_algo_run, update_algo_run
 )
+from app.tasks.algo_tasks import run_algo_task
 from pydantic import BaseModel
 from typing import Optional
 
@@ -15,6 +16,9 @@ class StartAlgoRequest(BaseModel):
     product_id: int
     order_size: int
     params: dict
+
+class StopAlgoRequest(BaseModel):
+    run_id: str
 
 @router.get('/')
 def list_algos():
@@ -62,29 +66,69 @@ def start_algo(req: StartAlgoRequest, user=Depends(get_current_user)):
     """Start a prebuilt algo strategy"""
     uid = user['uid']
     
-    # Create algo run record
+    print(f"🚀 Starting algo: {req.algo_name} for user {uid}")
+    print(f"   Symbol: {req.symbol}")
+    print(f"   Product ID: {req.product_id}")
+    print(f"   Order Size: {req.order_size}")
+    print(f"   Params: {req.params}")
+    
+    # Create algo run record with pending status
     run_id = create_algo_run(uid, {
         'algo_id': req.algo_id,
         'algo_name': req.algo_name,
         'symbol': req.symbol,
         'product_id': req.product_id,
         'params': req.params,
-        'celery_task_id': 'pending'
+        'celery_task_id': 'dispatching'
     })
     
-    # TODO: Dispatch Celery task
-    # For now, return success
+    print(f"✅ Algo run created: {run_id}")
     
-    return {
-        'run_id': run_id,
-        'status': 'running',
-        'message': f'{req.algo_name} started for {req.symbol}'
-    }
+    # Dispatch Celery task
+    try:
+        print(f"📤 Dispatching Celery task...")
+        task = run_algo_task.delay(
+            uid=uid,
+            run_id=run_id,
+            algo_id=req.algo_id,
+            algo_name=req.algo_name,
+            symbol=req.symbol,
+            product_id=req.product_id,
+            order_size=req.order_size,
+            params=req.params
+        )
+        
+        print(f"✅ Celery task dispatched: {task.id}")
+        
+        # Update with actual task ID
+        update_algo_run(run_id, {
+            'celery_task_id': task.id
+        })
+        
+        print(f"✅ Algo run updated with task ID")
+        
+        return {
+            'run_id': run_id,
+            'task_id': task.id,
+            'status': 'running',
+            'message': f'{req.algo_name} started for {req.symbol}'
+        }
+        
+    except Exception as e:
+        print(f"❌ Failed to dispatch Celery task: {e}")
+        # Update status to error
+        update_algo_run(run_id, {
+            'status': 'error',
+            'celery_task_id': 'failed',
+            'error_message': str(e)
+        })
+        raise HTTPException(500, f'Failed to start algorithm: {str(e)}')
 
 @router.post('/stop')
-def stop_algo(run_id: str, user=Depends(get_current_user)):
+def stop_algo(req: StopAlgoRequest, user=Depends(get_current_user)):
     """Stop a running algo"""
     uid = user['uid']
+    run_id = req.run_id
     
     # Verify ownership
     run = get_algo_run(run_id)
@@ -95,6 +139,14 @@ def stop_algo(run_id: str, user=Depends(get_current_user)):
     stop_algo_run(run_id)
     
     # TODO: Revoke Celery task
+    task_id = run.get('celery_task_id')
+    if task_id and task_id not in ['pending', 'dispatching', 'failed']:
+        try:
+            from app.tasks.celery_app import celery_app
+            celery_app.control.revoke(task_id, terminate=True)
+            print(f"✅ Celery task {task_id} revoked")
+        except Exception as e:
+            print(f"⚠️  Failed to revoke task: {e}")
     
     return {'status': 'stopped', 'run_id': run_id}
 
