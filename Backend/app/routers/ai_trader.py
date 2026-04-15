@@ -38,7 +38,7 @@ def start_ai_trader(req: StartAIRequest, user=Depends(get_current_user)):
 
     active_sessions = get_active_ai_sessions(uid)
     if active_sessions:
-        raise HTTPException(409, 'AI Trader already running. Stop active session first.')
+        raise HTTPException(409, f'AI Trader already running ({len(active_sessions)} active session(s)). Stop active session first.')
 
     # Check if model exists, train if not
     model_path = f'models/{req.symbol}_xgb.pkl'

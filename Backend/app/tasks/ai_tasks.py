@@ -101,7 +101,14 @@ def run_ai_task(self, uid: str, session_id: str):
         })
         return
 
-    api_key, api_secret = get_delta_keys(uid)
+    try:
+        api_key, api_secret = get_delta_keys(uid)
+    except Exception as e:
+        update_ai_session(session_id, {
+            'status': 'error',
+            'error_message': f'Failed to retrieve Delta Exchange API credentials: {str(e)}'
+        })
+        return
     client = DeltaClient(api_key, api_secret)
     asyncio.run(_run_ai_loop(
         client=client,
@@ -263,7 +270,8 @@ async def _run_ai_loop(client, uid: str, session_id: str, symbol: str, product_i
                         )
                         order_response = client.post('/v2/orders/bracket', payload)
                         if not order_response.get('success'):
-                            raise ValueError(f"Order failed: {order_response}")
+                            err_msg = order_response.get('error') or order_response.get('message') or 'Order failed'
+                            raise ValueError(err_msg)
 
                         order_id = order_response.get('result', {}).get('id')
                         save_trade(uid, {

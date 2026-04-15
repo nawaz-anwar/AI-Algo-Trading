@@ -238,7 +238,7 @@ export function AITrader() {
               <input
                 type="number"
                 value={form.order_size}
-                onChange={(e) => updateForm({ order_size: parseInt(e.target.value) || 1 })}
+                onChange={(e) => updateForm({ order_size: parseInt(e.target.value, 10) || 1 })}
                 min={1}
                 disabled={isActive}
                 className="w-full px-3 py-2.5 bg-[#0F172A] border border-[#334155] rounded-lg text-[#F1F5F9] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
@@ -269,7 +269,7 @@ export function AITrader() {
               <input
                 type="number"
                 value={form.max_daily_trades}
-                onChange={(e) => updateForm({ max_daily_trades: parseInt(e.target.value) || 10 })}
+                onChange={(e) => updateForm({ max_daily_trades: parseInt(e.target.value, 10) || 10 })}
                 min={1}
                 disabled={isActive}
                 className="w-full px-3 py-2.5 bg-[#0F172A] border border-[#334155] rounded-lg text-[#F1F5F9] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
@@ -296,7 +296,7 @@ export function AITrader() {
             <input
               type="number"
               value={form.max_order_size}
-              onChange={(e) => updateForm({ max_order_size: parseInt(e.target.value) || 10 })}
+              onChange={(e) => updateForm({ max_order_size: parseInt(e.target.value, 10) || 10 })}
               min={1}
               disabled={isActive}
               className="w-full px-3 py-2.5 bg-[#0F172A] border border-[#334155] rounded-lg text-[#F1F5F9] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
@@ -307,7 +307,7 @@ export function AITrader() {
             <input
               type="number"
               value={form.cooldown_seconds}
-              onChange={(e) => updateForm({ cooldown_seconds: parseInt(e.target.value) || 60 })}
+              onChange={(e) => updateForm({ cooldown_seconds: parseInt(e.target.value, 10) || 60 })}
               min={5}
               disabled={isActive}
               className="w-full px-3 py-2.5 bg-[#0F172A] border border-[#334155] rounded-lg text-[#F1F5F9] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
