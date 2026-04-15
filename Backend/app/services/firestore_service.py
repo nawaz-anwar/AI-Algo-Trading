@@ -2,6 +2,7 @@ from google.cloud.firestore_v1 import SERVER_TIMESTAMP, Increment
 from app.firebase_init import get_db
 from cryptography.fernet import Fernet
 import os
+import time
 
 encryption_key = os.getenv('ENCRYPTION_KEY')
 if not encryption_key:
@@ -127,3 +128,28 @@ def stop_ai_session(session_id: str):
 def get_ai_session(session_id: str) -> dict:
     doc = get_db().collection('ai_sessions').document(session_id).get()
     return {'id': doc.id, **doc.to_dict()} if doc.exists else None
+
+def get_active_ai_sessions(uid: str) -> list:
+    docs = (get_db().collection('ai_sessions')
+            .where('userId', '==', uid)
+            .where('status', '==', 'active')
+            .stream())
+    return [{'id': d.id, **d.to_dict()} for d in docs]
+
+def save_ai_signal(session_id: str, signal: dict):
+    get_db().collection('ai_signals').add({
+        **signal,
+        'session_id': session_id,
+        'created_at': SERVER_TIMESTAMP,
+        'created_at_ts': int(time.time())
+    })
+
+def get_ai_signals(session_id: str, limit: int = 50) -> list:
+    docs = (get_db().collection('ai_signals')
+            .where('session_id', '==', session_id)
+            .limit(1000)
+            .stream())
+
+    signals = [{'id': d.id, **d.to_dict()} for d in docs]
+    signals.sort(key=lambda x: x.get('created_at_ts', 0), reverse=True)
+    return signals[:limit]

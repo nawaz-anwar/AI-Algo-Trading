@@ -9,7 +9,7 @@ celery_app = Celery(
     'cryptoalgo',
     broker=os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
     backend=os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
-    include=['app.tasks.algo_tasks']
+    include=['app.tasks.algo_tasks', 'app.tasks.ai_tasks']
 )
 
 # Celery configuration
