@@ -5,6 +5,7 @@ from app.services.firestore_service import (
     get_active_ai_sessions, get_ai_signals
 )
 from app.services.ai_engine import train_model
+from app.tasks.celery_app import celery_app
 from app.tasks.ai_tasks import run_ai_task
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -109,7 +110,6 @@ def stop_ai(req: StopAIRequest, user=Depends(get_current_user)):
     task_id = session.get('celery_task_id')
     if task_id and task_id not in ['pending', 'failed']:
         try:
-            from app.tasks.celery_app import celery_app
             celery_app.control.revoke(task_id, terminate=True)
         except Exception:
             pass

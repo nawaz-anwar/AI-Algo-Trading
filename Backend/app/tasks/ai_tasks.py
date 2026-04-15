@@ -148,7 +148,7 @@ async def _run_ai_loop(client, uid: str, session_id: str, symbol: str, product_i
                 'volume': _safe_float(volumes[i] if i < len(volumes) else 0),
             })
 
-    ws_url = os.getenv('DELTA_BASE_URL', 'https://api.india.delta.exchange').replace('https', 'wss') + '/live'
+    ws_url = os.getenv('DELTA_BASE_URL', 'https://api.india.delta.exchange').replace('https://', 'wss://') + '/live'
     ws_symbol = f"MARK:{symbol}"
     consecutive_errors = 0
     retries = 0
