@@ -8,6 +8,7 @@ firebase-admin==6.5.0
 # Delta Exchange
 httpx==0.27.0
 websockets==12.0
+websockets==12.0
 
 # Background tasks
 celery==5.3.6

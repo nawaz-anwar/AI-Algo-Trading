@@ -62,5 +62,6 @@ export const api = {
 
   // Trades
   getTradeHistory: (limit: number = 50) => call('GET', `/api/trades/history?limit=${limit}`),
-  getTradeStats: () => call('GET', '/api/trades/stats')
+  getTradeStats: () => call('GET', '/api/trades/stats'),
+  createSampleTrades: () => call('POST', '/api/trades/create-sample')
 }

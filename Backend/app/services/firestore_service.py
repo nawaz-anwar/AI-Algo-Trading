@@ -58,11 +58,29 @@ def close_trade(trade_id: str, exit_price: float, pnl_usdt: float, pnl_pct: floa
     })
 
 def get_trades(uid: str, limit=50) -> list:
-    docs = (get_db().collection('trades')
-            .where('userId', '==', uid)
-            .order_by('opened_at', direction='DESCENDING')
-            .limit(limit).stream())
-    return [{'id': d.id, **d.to_dict()} for d in docs]
+    """
+    Get trades for a user. 
+    Note: We fetch all and sort in Python to avoid Firestore composite index requirement.
+    For production with many trades, create the composite index instead.
+    """
+    try:
+        # Fetch without ordering (no index required)
+        docs = (get_db().collection('trades')
+                .where('userId', '==', uid)
+                .limit(1000)  # Get more to allow sorting
+                .stream())
+        
+        # Convert to list and sort in Python
+        trades = [{'id': d.id, **d.to_dict()} for d in docs]
+        
+        # Sort by opened_at in descending order
+        trades.sort(key=lambda x: x.get('opened_at', 0), reverse=True)
+        
+        # Apply limit
+        return trades[:limit]
+    except Exception as e:
+        print(f"Error fetching trades: {e}")
+        return []
 
 # ── Algo Runs ────────────────────────────────────────────
 def create_algo_run(uid: str, data: dict) -> str:
@@ -71,6 +89,9 @@ def create_algo_run(uid: str, data: dict) -> str:
         'status': 'running', 'started_at': SERVER_TIMESTAMP
     })
     return ref[1].id
+
+def update_algo_run(run_id: str, updates: dict):
+    get_db().collection('algo_runs').document(run_id).update(updates)
 
 def stop_algo_run(run_id: str):
     get_db().collection('algo_runs').document(run_id).update({
