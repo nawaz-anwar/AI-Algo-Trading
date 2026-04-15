@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./Backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    volumes:
+      - ./Backend:/app
+      - ./Backend/models:/app/models
+    networks:
+      - cryptoalgo
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    networks:
+      - cryptoalgo
+
+  frontend:
+    build: ./Frontend
+    ports:
+      - '5173:5173'
+    env_file:
+      - .env
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    networks:
+      - cryptoalgo
+
+networks:
+  cryptoalgo:
+    driver: bridge
