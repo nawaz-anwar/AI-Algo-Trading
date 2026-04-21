@@ -441,6 +441,23 @@ python test_delta_auth.py YOUR_API_KEY YOUR_API_SECRET
 
 ## 🚀 Deployment
 
+### Vercel Deployment (Frontend)
+
+This repository includes a root `vercel.json` configured for the `Frontend/` Vite app.
+
+Set these environment variables in your Vercel project:
+
+- `VITE_API_URL` (your deployed backend URL, not localhost)
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_WS_URL` (optional override)
+
+After setting variables, redeploy from `main`.
+
 ### Docker Deployment
 
 ```bash
