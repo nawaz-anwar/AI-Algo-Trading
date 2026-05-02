@@ -58,6 +58,9 @@ export const api = {
   }) => call('POST', '/api/ai/start', data),
   stopAI: (session_id: string) => call('POST', '/api/ai/stop', { session_id }),
   getAIStatus: (session_id: string) => call('GET', `/api/ai/status/${session_id}`),
+  getActiveAI: () => call('GET', '/api/ai/active'),
+  getAISignals: (session_id: string, limit: number = 30) =>
+    call('GET', `/api/ai/signals/${session_id}?limit=${limit}`),
   trainModel: (symbol: string) => call('POST', '/api/ai/train', { symbol }),
 
   // Trades
